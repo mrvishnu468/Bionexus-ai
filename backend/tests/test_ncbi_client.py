@@ -39,3 +39,39 @@ def test_parse_sra_records():
 
     assert dataset.accession
     assert dataset.library_strategy
+def test_alzheimer_metadata():
+    ids = ncbi_client.search_sra(
+        "Alzheimer disease AND Homo sapiens AND RNA-Seq",
+        retmax=1,
+    )
+
+    records = ncbi_client.fetch_sra_records(ids)
+    datasets = ncbi_client.parse_sra_records(records)
+
+    dataset = datasets[0]
+
+    assert dataset.organism == "Homo sapiens"
+    assert dataset.study_accession
+    assert dataset.study_title
+    assert dataset.study_abstract
+    assert dataset.sample_count is not None
+    assert dataset.run_count is not None
+    assert dataset.experiment_type
+
+
+def test_arabidopsis_metadata():
+    ids = ncbi_client.search_sra(
+        "Arabidopsis thaliana AND RNA-Seq",
+        retmax=1,
+    )
+
+    records = ncbi_client.fetch_sra_records(ids)
+    datasets = ncbi_client.parse_sra_records(records)
+
+    dataset = datasets[0]
+
+    assert dataset.organism == "Arabidopsis thaliana"
+    assert dataset.study_accession
+    assert dataset.library_strategy == "RNA-Seq"
+    assert dataset.sample_count is not None
+    assert dataset.run_count is not None

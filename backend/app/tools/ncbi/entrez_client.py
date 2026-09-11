@@ -86,6 +86,8 @@ class NCBIClient:
                 else None
             )
 
+            experiment_type = library_source
+
             organism = None
             sample = package.find("SAMPLE")
 
@@ -93,6 +95,24 @@ class NCBIClient:
                 organism = sample.findtext(
                     "SAMPLE_NAME/SCIENTIFIC_NAME"
                 )
+
+            study_title = None
+            study_abstract = None
+
+            study_descriptor = package.find(
+                "STUDY/DESCRIPTOR"
+            )
+
+            if study_descriptor is not None:
+                study_title = study_descriptor.findtext(
+                    "STUDY_TITLE"
+                )
+                study_abstract = study_descriptor.findtext(
+                    "STUDY_ABSTRACT"
+                )
+
+            sample_count = len(package.findall("SAMPLE"))
+            run_count = len(package.findall("RUN_SET/RUN"))
 
             datasets.append(
                 SRADataset(
@@ -103,6 +123,11 @@ class NCBIClient:
                     library_strategy=library_strategy,
                     library_source=library_source,
                     description=description,
+                    sample_count=sample_count,
+                    run_count=run_count,
+                    study_title=study_title,
+                    study_abstract=study_abstract,
+                    experiment_type=experiment_type,
                 )
             )
 
