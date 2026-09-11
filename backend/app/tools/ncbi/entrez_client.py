@@ -5,7 +5,6 @@ from Bio import Entrez
 
 from app.models.dataset import SRADataset
 
-
 class NCBIClient:
     def __init__(self):
         self.email = os.getenv("NCBI_EMAIL", "bionexus@example.com")
