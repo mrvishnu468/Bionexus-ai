@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.api.evaluation import router as evaluation_router
 from app.api.datasets import router as datasets_router
 from app.api.research import router as research_router
 
@@ -19,8 +19,7 @@ app.add_middleware(
 
 app.include_router(research_router)
 app.include_router(datasets_router)
-
-
+app.include_router(evaluation_router)
 @app.get("/health")
 async def health():
     return {"status": "ok"}
