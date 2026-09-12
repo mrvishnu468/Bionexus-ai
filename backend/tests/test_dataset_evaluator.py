@@ -49,3 +49,75 @@ def test_single_nucleus_dataset_is_conditional():
         "specialized analysis" in warning
         for warning in evaluation.warnings
     )
+def test_single_cell_dataset_remains_conditional_with_many_samples():
+    dataset = SRADataset(
+        accession="TEST_SINGLE_CELL_001",
+        study_accession="TEST_STUDY_002",
+        title="Human single-cell RNA-seq study",
+        organism="Homo sapiens",
+        library_strategy="RNA-Seq",
+        library_source="TRANSCRIPTOMIC SINGLE CELL",
+        description="Single-cell transcriptomic sequencing.",
+        sample_count=50,
+        run_count=50,
+        study_title="Human single-cell study",
+        study_abstract="A human single-cell RNA-seq experiment.",
+        experiment_type="TRANSCRIPTOMIC SINGLE CELL",
+    )
+
+    evaluation = dataset_evaluator.evaluate(dataset)
+
+    assert evaluation.suitability == DatasetSuitability.CONDITIONAL
+    assert any(
+        "specialized analysis" in warning
+        for warning in evaluation.warnings
+    )
+
+
+def test_single_nucleus_dataset_is_conditional():
+    dataset = SRADataset(
+        accession="TEST_SINGLE_NUCLEUS_001",
+        study_accession="TEST_STUDY_003",
+        title="Human single-nucleus RNA-seq study",
+        organism="Homo sapiens",
+        library_strategy="RNA-Seq",
+        library_source="TRANSCRIPTOMIC SINGLE NUCLEUS",
+        description="Single-nucleus transcriptomic sequencing.",
+        sample_count=20,
+        run_count=20,
+        study_title="Human single-nucleus study",
+        study_abstract="A human single-nucleus RNA-seq experiment.",
+        experiment_type="TRANSCRIPTOMIC SINGLE NUCLEUS",
+    )
+
+    evaluation = dataset_evaluator.evaluate(dataset)
+
+    assert evaluation.suitability == DatasetSuitability.CONDITIONAL
+    assert any(
+        "specialized analysis" in warning
+        for warning in evaluation.warnings
+    )
+
+
+def test_non_transcriptomic_source_is_not_marked_as_transcriptomic():
+    dataset = SRADataset(
+        accession="TEST_NON_TRANSCRIPTOMIC_001",
+        study_accession="TEST_STUDY_004",
+        title="Human sequencing study",
+        organism="Homo sapiens",
+        library_strategy="RNA-Seq",
+        library_source="GENOMIC",
+        description="Genomic sequencing.",
+        sample_count=6,
+        run_count=6,
+        study_title="Human genomic study",
+        study_abstract="A human genomic sequencing experiment.",
+        experiment_type="GENOMIC",
+    )
+
+    evaluation = dataset_evaluator.evaluate(dataset)
+
+    assert any(
+        "Transcriptomic library source could not be confirmed." in warning
+        for warning in evaluation.warnings
+    )

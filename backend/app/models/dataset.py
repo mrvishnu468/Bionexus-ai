@@ -14,3 +14,4 @@ class SRADataset(BaseModel):
     study_title: str | None = None
     study_abstract: str | None = None
     experiment_type: str | None = None
+    samples: list[dict] = []
