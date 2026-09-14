@@ -1,4 +1,4 @@
-from app.models.dataset import SRADataset
+from app.models.dataset import SRAExperiment, SRADataset, SRASample
 from app.models.evaluation import DatasetEvaluation
 from app.services.dataset_evaluator import dataset_evaluator
 from app.tools.ncbi.entrez_client import ncbi_client
@@ -61,19 +61,33 @@ class StudyDatasetDiscovery:
             for dataset in study_datasets
         )
 
-        all_samples: list[dict] = []
+        all_experiments: list[SRAExperiment] = []
+        all_samples: list[SRASample] = []
 
         for dataset in study_datasets:
+            all_experiments.extend(
+                dataset.experiments,
+            )
             all_samples.extend(
                 dataset.samples,
             )
 
-        return representative.model_copy(
-            update={
-                "sample_count": total_samples,
-                "run_count": total_runs,
-                "samples": all_samples,
-            }
+        return SRADataset(
+            accession=study_accession,
+            study_accession=study_accession,
+            title=representative.study_title
+            or representative.title,
+            organism=representative.organism,
+            library_strategy=representative.library_strategy,
+            library_source=representative.library_source,
+            description=representative.description,
+            sample_count=total_samples,
+            run_count=total_runs,
+            study_title=representative.study_title,
+            study_abstract=representative.study_abstract,
+            experiment_type=representative.experiment_type,
+            experiments=all_experiments,
+            samples=all_samples,
         )
 
     def discover(
