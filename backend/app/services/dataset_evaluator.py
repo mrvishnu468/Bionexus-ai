@@ -138,9 +138,9 @@ class DatasetEvaluator:
             )
         else:
             warnings.append(
-                "Bulk transcriptomic library type "
-                "could not be confirmed.",
-            )
+    "Transcriptomic library source could not be confirmed.",
+)
+
 
         if (
             dataset.sample_count
@@ -191,13 +191,13 @@ class DatasetEvaluator:
             )
 
         return DatasetEvaluation(
-            accession=dataset.accession,
-            suitability=suitability,
-            assay_type=assay_type,
-            score=score,
-            reasons=reasons,
-            warnings=warnings,
-        )
+    accession=dataset.accession,
+    suitability=suitability,
+    assay_type=assay_type,
+    score=score,
+    reasons=reasons,
+    warnings=warnings,
+)
 
 
 dataset_evaluator = DatasetEvaluator()
