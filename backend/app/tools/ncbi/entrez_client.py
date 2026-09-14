@@ -3,7 +3,12 @@ import xml.etree.ElementTree as ET
 
 from Bio import Entrez
 
-from app.models.dataset import SRADataset
+from app.models.dataset import (
+    SRADataset,
+    SRAExperiment,
+    SRASample,
+    SRARun,
+)
 
 
 class NCBIClient:
@@ -150,8 +155,64 @@ class NCBIClient:
 
             experiment_type = library_source
 
-            organism = None
-            sample_metadata = []
+            study_title = None
+            study_abstract = None
+
+            study_descriptor = package.find(
+                "STUDY/DESCRIPTOR"
+            )
+
+            if study_descriptor is not None:
+                study_title = study_descriptor.findtext(
+                    "STUDY_TITLE"
+                )
+
+                study_abstract = study_descriptor.findtext(
+                    "STUDY_ABSTRACT"
+                )
+
+            runs: list[SRARun] = []
+
+            for run in package.findall("RUN_SET/RUN"):
+                run_accession = run.get(
+                    "accession",
+                    "",
+                )
+
+                experiment_ref = run.find(
+                    "EXPERIMENT_REF"
+                )
+
+                run_experiment_accession = (
+                    experiment_ref.get("accession")
+                    if experiment_ref is not None
+                    else experiment_accession
+                )
+
+                sample_accession = None
+
+                for member in run.findall(
+                    "Pool/Member"
+                ):
+                    sample_ref = member.get(
+                        "accession"
+                    )
+
+                    if sample_ref:
+                        sample_accession = sample_ref
+                        break
+
+                runs.append(
+                    SRARun(
+                        accession=run_accession,
+                        experiment_accession=(
+                            run_experiment_accession
+                        ),
+                        sample_accession=sample_accession,
+                    )
+                )
+
+            samples: list[SRASample] = []
 
             for sample in package.findall("SAMPLE"):
                 sample_accession = sample.get(
@@ -167,10 +228,7 @@ class NCBIClient:
                     "SAMPLE_NAME/SCIENTIFIC_NAME"
                 )
 
-                if organism is None:
-                    organism = sample_organism
-
-                attributes = {}
+                attributes: dict[str, str] = {}
 
                 for attribute in sample.findall(
                     "SAMPLE_ATTRIBUTES/SAMPLE_ATTRIBUTE"
@@ -181,43 +239,32 @@ class NCBIClient:
                     if tag and value:
                         attributes[tag] = value
 
-                sample_metadata.append(
-                    {
-                        "accession": sample_accession,
-                        "title": sample_title,
-                        "organism": sample_organism,
-                        "attributes": attributes,
-                        "experiment_accession": (
+                sample_runs = [
+                    run.model_copy()
+                    for run in runs
+                    if run.sample_accession
+                    == sample_accession
+                ]
+
+                samples.append(
+                    SRASample(
+                        accession=sample_accession,
+                        title=sample_title,
+                        organism=sample_organism,
+                        attributes=attributes,
+                        experiment_accession=(
                             experiment_accession
                         ),
-                        "study_accession": study_accession,
-                    }
-                )
-
-            study_title = None
-            study_abstract = None
-
-            study_descriptor = package.find(
-                "STUDY/DESCRIPTOR"
-            )
-
-            if study_descriptor is not None:
-                study_title = study_descriptor.findtext(
-                    "STUDY_TITLE"
-                )
-
-                study_abstract = (
-                    study_descriptor.findtext(
-                        "STUDY_ABSTRACT"
+                        study_accession=study_accession,
+                        runs=sample_runs,
                     )
                 )
 
-            sample_count = len(
-                package.findall("SAMPLE")
-            )
-
-            run_count = len(
-                package.findall("RUN_SET/RUN")
+            experiment_model = SRAExperiment(
+                accession=experiment_accession,
+                title=experiment_title,
+                study_accession=study_accession,
+                samples=samples,
             )
 
             datasets.append(
@@ -225,16 +272,21 @@ class NCBIClient:
                     accession=experiment_accession,
                     study_accession=study_accession,
                     title=experiment_title,
-                    organism=organism,
+                    organism=(
+                        samples[0].organism
+                        if samples
+                        else None
+                    ),
                     library_strategy=library_strategy,
                     library_source=library_source,
                     description=description,
-                    sample_count=sample_count,
-                    run_count=run_count,
+                    sample_count=len(samples),
+                    run_count=len(runs),
                     study_title=study_title,
                     study_abstract=study_abstract,
                     experiment_type=experiment_type,
-                    samples=sample_metadata,
+                    experiments=[experiment_model],
+                    samples=samples,
                 )
             )
 

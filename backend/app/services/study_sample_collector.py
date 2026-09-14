@@ -21,7 +21,11 @@ class StudySampleCollector:
 
         samples: list[dict] = []
 
-        for retstart in range(0, total_count, page_size):
+        for retstart in range(
+            0,
+            total_count,
+            page_size,
+        ):
             _, ids = ncbi_client.search_sra_study_page(
                 study_accession,
                 retmax=page_size,
@@ -39,13 +43,23 @@ class StudySampleCollector:
                     continue
 
                 for sample in dataset.samples:
-                    if not sample.get("study_accession"):
-                        sample["study_accession"] = study_accession
+                    sample_data = sample.model_dump()
 
-                    if not sample.get("experiment_accession"):
-                        sample["experiment_accession"] = dataset.accession
+                    if not sample_data.get(
+                        "study_accession"
+                    ):
+                        sample_data["study_accession"] = (
+                            study_accession
+                        )
 
-                    samples.append(sample)
+                    if not sample_data.get(
+                        "experiment_accession"
+                    ):
+                        sample_data["experiment_accession"] = (
+                            dataset.accession
+                        )
+
+                    samples.append(sample_data)
 
         return samples
 
