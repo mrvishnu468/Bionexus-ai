@@ -21,6 +21,7 @@ class SRAExperiment(BaseModel):
     accession: str
     title: str | None = None
     study_accession: str | None = None
+    organism: str | None = None
     samples: list[SRASample] = []
 
 

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DatasetSuitability(str, Enum):
@@ -22,5 +22,11 @@ class DatasetEvaluation(BaseModel):
     suitability: DatasetSuitability
     assay_type: DatasetAssayType
     score: int
-    reasons: list[str]
-    warnings: list[str]
+    reasons: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+    relevance_score: int = 0
+    readiness_score: int = 0
+    suitability_score: int = 0
+    unknowns: list[str] = Field(default_factory=list)
+    score_breakdown: dict[str, int] = Field(default_factory=dict)

@@ -261,11 +261,16 @@ class NCBIClient:
                 )
 
             experiment_model = SRAExperiment(
-                accession=experiment_accession,
-                title=experiment_title,
-                study_accession=study_accession,
-                samples=samples,
-            )
+    accession=experiment_accession,
+    title=experiment_title,
+    study_accession=study_accession,
+    organism=(
+        samples[0].organism
+        if samples
+        else None
+    ),
+    samples=samples,
+)
 
             datasets.append(
                 SRADataset(

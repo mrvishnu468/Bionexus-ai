@@ -179,4 +179,4 @@ def test_study_aggregation(monkeypatch):
     assert study.sample_count == 5
     assert study.run_count == 5
     assert len(study.samples) == 5
-    assert evaluation.score == 100
+    assert evaluation.score == round(0.60 * evaluation.relevance_score+ 0.40 * evaluation.readiness_score)

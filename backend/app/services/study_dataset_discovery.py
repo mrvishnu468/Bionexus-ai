@@ -2,7 +2,7 @@ from app.models.dataset import SRAExperiment, SRADataset, SRASample
 from app.models.evaluation import DatasetEvaluation
 from app.services.dataset_evaluator import dataset_evaluator
 from app.tools.ncbi.entrez_client import ncbi_client
-
+from app.models.research_intent import ResearchIntent
 
 class StudyDatasetDiscovery:
     def _collect_study(
@@ -89,12 +89,12 @@ class StudyDatasetDiscovery:
             experiments=all_experiments,
             samples=all_samples,
         )
-
     def discover(
-        self,
-        query: str,
-        retmax: int = 10,
-    ) -> list[tuple[SRADataset, DatasetEvaluation]]:
+     self,
+     query: str,
+     retmax: int = 10,
+    intent: ResearchIntent | None = None,
+) -> list[tuple[SRADataset, DatasetEvaluation]]:
         query = query.strip()
 
         if not query:
@@ -143,6 +143,7 @@ class StudyDatasetDiscovery:
 
             evaluation = dataset_evaluator.evaluate(
                 study,
+                intent=intent,
             )
 
             results.append(
