@@ -1,0 +1,316 @@
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page-kicker {
+  color: var(--color-accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.page-header h1,
+.welcome-panel h2 {
+  margin: 8px 0 10px;
+  color: var(--color-text-strong);
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.page-header p,
+.welcome-panel > p,
+.card-copy {
+  max-width: 46rem;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--color-text-strong);
+}
+
+.ui-button-primary {
+  background: linear-gradient(135deg, #0d9488, #2563eb);
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.ui-button-secondary {
+  background: rgba(10, 27, 46, 0.8);
+  border-color: var(--color-border);
+  color: #8fd9d1;
+}
+
+.ui-button-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.ui-button:disabled {
+  opacity: 0.5;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: rgba(13, 30, 47, 0.55);
+  color: #9eb8c8;
+}
+
+.ui-card {
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    145deg,
+    rgba(14, 35, 58, 0.92),
+    rgba(9, 25, 43, 0.92)
+  );
+}
+
+.card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.card-heading h3 {
+  font-size: 16px;
+  color: var(--color-text-strong);
+}
+
+.ui-empty {
+  padding: 28px 8px 8px;
+}
+
+.ui-empty strong {
+  display: block;
+  color: var(--color-text-strong);
+  font-size: 15px;
+}
+
+.ui-empty p {
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.status-badge-unavailable {
+  color: #fda4af;
+  border-color: rgba(251, 113, 133, 0.28);
+  background: rgba(225, 29, 72, 0.08);
+}
+
+.status-badge-neutral {
+  color: #93c5fd;
+  border-color: rgba(96, 165, 250, 0.28);
+  background: var(--color-info-soft);
+}
+
+.global-search {
+  min-width: 280px;
+  max-width: 560px;
+  flex: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: rgba(13, 30, 47, 0.68);
+  color: var(--color-text-subtle);
+}
+
+.global-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.global-search input:disabled {
+  opacity: 1;
+}
+
+.global-search kbd {
+  min-width: 21px;
+  padding: 3px 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: rgba(7, 17, 31, 0.8);
+  color: #607b8e;
+  font-size: 10px;
+  text-align: center;
+}
+
+.workspace-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: rgba(12, 30, 51, 0.78);
+}
+
+.workspace-form label {
+  color: #9fb5ca;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-form textarea,
+.workspace-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(79, 112, 145, 0.38);
+  border-radius: 10px;
+  background: #091a2c;
+  color: #e2f3ff;
+}
+
+.workspace-form textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.form-row input {
+  flex: 1;
+}
+
+.form-note {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* Light-theme component refinements */
+:root[data-theme="light"] .ui-button-secondary {
+  background: #ffffff;
+  border-color: #d6e2f2;
+  color: #24516a;
+}
+
+:root[data-theme="light"] .search-field,
+:root[data-theme="light"] .search-field input {
+  background: #ffffff;
+  color: #283653;
+}
+
+:root[data-theme="light"] .workspace-form,
+:root[data-theme="light"] .workspace-card {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .workspace-form label {
+  color: #526781;
+}
+
+:root[data-theme="light"] .workspace-form input,
+:root[data-theme="light"] .workspace-form textarea,
+:root[data-theme="light"] .workspace-form select {
+  background: #f5f9ff;
+  color: #1e3150;
+  border-color: #d4e1f2;
+}
+
+:root[data-theme="light"] .status-badge-unavailable {
+  color: #a61b43;
+  background: #fff0f3;
+  border-color: #f4c5d2;
+}
+
+:root[data-theme="light"] .status-badge-neutral {
+  color: #2854b8;
+  background: #eaf0ff;
+  border-color: #cbd8ff;
+}
+/* Light-theme header search */
+:root[data-theme="light"] .global-search {
+  background: #ffffff;
+  border: 1px solid #d5e4f5;
+  color: #283653;
+  box-shadow: 0 2px 8px rgba(45, 75, 130, 0.04);
+}
+
+:root[data-theme="light"] .global-search input {
+  background: transparent;
+  color: #283653;
+}
+
+:root[data-theme="light"] .global-search input::placeholder {
+  color: #8292aa;
+}
+
+:root[data-theme="light"] .global-search kbd {
+  background: #edf4ff;
+  color: #526781;
+  border-color: #d5e4f5;
+}
+/* Light-theme header icon buttons */
+:root[data-theme="light"] .app-header .icon-button {
+  background: #ffffff;
+  color: #087f8c;
+  border: 1px solid #d5e4f5;
+  box-shadow: 0 2px 8px rgba(45, 75, 130, 0.04);
+}
+
+:root[data-theme="light"] .app-header .icon-button:hover {
+  background: #d9f5f1;
+  color: #066775;
+  border-color: #8bd8d0;
+}

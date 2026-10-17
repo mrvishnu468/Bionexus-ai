@@ -1,0 +1,80 @@
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas,
+    monospace;
+
+  --color-bg: #07111f;
+  --color-bg-elevated: #0b1a2c;
+  --color-surface: #0d2236;
+  --color-surface-strong: #102a42;
+  --color-sidebar: rgba(5, 15, 28, 0.98);
+
+  --color-text: #d8e7f3;
+  --color-text-strong: #eef8ff;
+  --color-text-muted: #7f97ab;
+  --color-text-subtle: #5e768c;
+
+  --color-accent: #14b8a6;
+  --color-accent-strong: #2dd4bf;
+  --color-accent-soft: rgba(20, 184, 166, 0.12);
+  --color-info: #60a5fa;
+  --color-info-soft: rgba(37, 99, 235, 0.12);
+  --color-warning: #fbbf24;
+  --color-danger: #fb7185;
+
+  --color-border: rgba(112, 180, 205, 0.14);
+  --color-border-strong: rgba(45, 212, 191, 0.32);
+  --color-focus: rgba(45, 212, 191, 0.28);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --sidebar-width: 248px;
+  --header-height: 68px;
+  --shadow-panel: 0 18px 40px rgba(0, 0, 0, 0.22);
+  --content-max: 1120px;
+}
+
+
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #f0f6ff;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-strong: #e4edff;
+  --color-sidebar: #f7f9ff;
+
+  --color-text: #283653;
+  --color-text-strong: #14213d;
+  --color-text-muted: #62718d;
+  --color-text-subtle: #7788a5;
+
+  --color-accent: #087f8c;
+  --color-accent-strong: #066775;
+  --color-accent-soft: #d9f5f1;
+  --color-info: #4169e1;
+  --color-info-soft: #e4ecff;
+  --color-warning: #a85d08;
+  --color-danger: #c12e55;
+
+  --color-border: #dce6f5;
+  --color-border-strong: #8bd8d0;
+  --color-focus: rgba(8, 127, 140, 0.25);
+
+  --shadow-panel: 0 8px 28px rgba(45, 75, 130, 0.08);
+}
