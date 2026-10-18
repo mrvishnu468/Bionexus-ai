@@ -1,14 +1,18 @@
-
 import type {
   DatasetEvaluation,
   DatasetSuitability,
   DatasetAssayType,
+  ResearchIntent,
+  IntentInterpretationResponse,
+  IntentApprovalResponse,
 } from "../types/api";
 
 export const API_BASE_URL = "http://127.0.0.1:8000";
 
 export const apiRoutes = {
   health: "/health",
+  intentInterpret: "/api/intent/interpret",
+  intentApprove: "/api/intent/approve",
   datasetSearch: "/api/datasets/search",
   datasetEvaluation: "/api/evaluation/dataset",
   research: "/api/research",
@@ -63,11 +67,25 @@ export interface DatasetSearchResult {
 
 export interface DatasetSearchResponse {
   datasets: DatasetSearchResult[];
+  review_required?: boolean;
+  ready_for_ranking?: boolean;
+  clarification_questions?: string[];
+  review_reasons?: string[];
 }
 
 export interface DatasetSearchRequest {
   query: string;
   retmax?: number;
+  intent?: ResearchIntent;
+  approval_token?: string;
+}
+
+export interface IntentInterpretationRequest {
+  query: string;
+}
+
+export interface IntentApprovalRequest {
+  intent: ResearchIntent;
 }
 
 export function apiUrl(path: string): string {
@@ -99,8 +117,13 @@ async function apiRequest<T>(
     let detail = `Request failed (${response.status})`;
 
     try {
-      const body: { detail?: string } = await response.json();
-      if (body.detail) detail = body.detail;
+      const body: { detail?: unknown } = await response.json();
+
+      if (typeof body.detail === "string") {
+        detail = body.detail;
+      } else if (body.detail !== undefined) {
+        detail = JSON.stringify(body.detail);
+      }
     } catch {
       // Keep the HTTP status message when the response has no JSON detail.
     }
@@ -111,6 +134,32 @@ async function apiRequest<T>(
   return response.json() as Promise<T>;
 }
 
+export function interpretResearchIntent(
+  request: IntentInterpretationRequest,
+): Promise<IntentInterpretationResponse> {
+  return apiRequest<IntentInterpretationResponse>(
+    apiRoutes.intentInterpret,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        query: request.query.trim(),
+      }),
+    },
+  );
+}
+
+export function approveResearchIntent(
+  request: IntentApprovalRequest,
+): Promise<IntentApprovalResponse> {
+  return apiRequest<IntentApprovalResponse>(
+    apiRoutes.intentApprove,
+    {
+      method: "POST",
+      body: JSON.stringify(request),
+    },
+  );
+}
+
 export function searchDatasets(
   request: DatasetSearchRequest,
 ): Promise<DatasetSearchResponse> {
@@ -119,6 +168,10 @@ export function searchDatasets(
     body: JSON.stringify({
       query: request.query.trim(),
       retmax: request.retmax ?? 10,
+      ...(request.intent ? { intent: request.intent } : {}),
+      ...(request.approval_token
+        ? { approval_token: request.approval_token }
+        : {}),
     }),
   });
 }
@@ -137,4 +190,11 @@ export async function checkBackendHealth(): Promise<boolean> {
   return result.status === "ok";
 }
 
-export type { DatasetEvaluation, DatasetSuitability, DatasetAssayType };
+export type {
+  DatasetEvaluation,
+  DatasetSuitability,
+  DatasetAssayType,
+  ResearchIntent,
+  IntentInterpretationResponse,
+  IntentApprovalResponse,
+};

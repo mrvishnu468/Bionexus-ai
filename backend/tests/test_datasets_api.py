@@ -10,9 +10,17 @@ from app.models.evaluation import (
     DatasetEvaluation,
     DatasetSuitability,
 )
+from app.models.research_intent import ResearchIntent
+from app.services.intent_approval import intent_approval_service
 
 
 client = TestClient(app)
+
+
+def add_approval_token(payload):
+    intent = ResearchIntent.model_validate(payload["intent"])
+    payload["approval_token"] = intent_approval_service.issue(intent)
+    return payload
 
 
 def test_empty_query_returns_no_datasets():
@@ -45,6 +53,7 @@ def test_ambiguous_intent_blocks_discovery():
             },
         },
     }
+    add_approval_token(payload)
 
     with patch(
         "app.api.datasets.study_dataset_discovery.discover"
@@ -92,6 +101,7 @@ def test_confirmed_intent_returns_discovered_dataset():
             },
         },
     }
+    add_approval_token(payload)
 
     with patch(
         "app.api.datasets.study_dataset_discovery.discover",

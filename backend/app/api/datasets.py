@@ -1,10 +1,14 @@
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.models.dataset import SRADataset
 from app.models.evaluation import DatasetEvaluation
-from app.models.research_intent import ResearchIntent, IntentReviewStatus
+from app.models.research_intent import ResearchIntent
+from app.services.intent_approval import (
+    IntentApprovalError,
+    intent_approval_service,
+)
 from app.services.intent_review import intent_review_service
 from app.services.study_dataset_discovery import (
     study_dataset_discovery,
@@ -21,6 +25,7 @@ class DatasetSearchRequest(BaseModel):
     query: str
     retmax: int = 10
     intent: ResearchIntent | None = None
+    approval_token: str | None = None
 
 
 class DatasetSearchResult(BaseModel):
@@ -53,6 +58,26 @@ async def search_datasets(
     intent = request.intent
 
     if intent is not None:
+        if not request.approval_token:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Researcher approval is required before "
+                    "dataset ranking."
+                ),
+            )
+
+        try:
+            intent_approval_service.verify(
+                intent,
+                request.approval_token,
+            )
+        except IntentApprovalError as exc:
+            raise HTTPException(
+                status_code=403,
+                detail=str(exc),
+            ) from exc
+
         review = intent_review_service.review(intent)
 
         if not review.ready_for_ranking:

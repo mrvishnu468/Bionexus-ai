@@ -89,6 +89,40 @@ class StudyDatasetDiscovery:
             experiments=all_experiments,
             samples=all_samples,
         )
+    @staticmethod
+    def _build_search_query(
+        query: str,
+        intent: ResearchIntent | None,
+    ) -> str:
+        """Build an NCBI-compatible SRA query from structured intent."""
+        if intent is None:
+            return query.strip()
+
+        terms: list[str] = []
+        field_mappings = (
+            ("disease", "All Fields"),
+            ("organism", "Organism"),
+            ("assay_type", "Strategy"),
+        )
+
+        for field_name, ncbi_field in field_mappings:
+            field = getattr(intent, field_name, None)
+            value = getattr(field, "value", None)
+
+            if not value or not value.strip():
+                continue
+
+            if field_name == "assay_type":
+                normalized = value.lower().replace("-", "").replace(" ", "")
+                if normalized == "rnaseq":
+                    value = "RNA-Seq"
+
+            escaped_value = value.replace('"', "").strip()
+            terms.append(f'"{escaped_value}"[{ncbi_field}]')
+
+        return " AND ".join(terms) if terms else query.strip()
+
+
     def discover(
      self,
      query: str,
@@ -100,8 +134,12 @@ class StudyDatasetDiscovery:
         if not query:
             return []
 
-        ids = ncbi_client.search_sra(
+        search_query = self._build_search_query(
             query,
+            intent,
+        )
+        ids = ncbi_client.search_sra(
+            search_query,
             retmax=retmax,
         )
 

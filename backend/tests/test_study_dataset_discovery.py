@@ -1,6 +1,9 @@
 from app.models.dataset import SRADataset
 from app.models.evaluation import DatasetAssayType
+from app.models.research_intent import IntentField, ResearchIntent
 from app.services.dataset_evaluator import DatasetEvaluator
+from app.services.study_dataset_discovery import StudyDatasetDiscovery
+
 
 
 def make_dataset(
@@ -26,6 +29,29 @@ def make_dataset(
         run_count=10,
         samples=[],
     )
+
+def test_build_search_query_uses_structured_criteria():
+    intent = ResearchIntent(
+        original_question=(
+            "Find public RNA-seq datasets for breast cancer "
+            "in Homo sapiens comparing tumor tissue with healthy controls."
+        ),
+        disease=IntentField(value="breast cancer"),
+        organism=IntentField(value="Homo sapiens"),
+        assay_type=IntentField(value="RNA-Seq"),
+        tissue=IntentField(value="tumor tissue"),
+    )
+
+    query = StudyDatasetDiscovery._build_search_query(
+        intent.original_question,
+        intent,
+    )
+
+    assert '"breast cancer"[All Fields]' in query
+    assert '"Homo sapiens"[Organism]' in query
+    assert '"RNA-Seq"[Strategy]' in query
+    assert "tumor tissue" not in query
+    assert " AND " in query
 
 
 def test_single_nucleus_classification():

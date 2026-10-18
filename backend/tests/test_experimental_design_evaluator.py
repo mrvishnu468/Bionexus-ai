@@ -55,3 +55,24 @@ def test_single_sample_group_is_not_suitable():
 
     assert suitable is False
     assert any("fewer than two samples" in reason for reason in reasons)
+def test_named_tissue_groups_are_not_automatically_approved_as_control():
+    design = ExperimentalDesign(
+        groups=[
+            ExperimentalGroup(
+                name="early breast cancer",
+                sample_count=6,
+            ),
+            ExperimentalGroup(
+                name="matched adjacent non-tumor tissue",
+                sample_count=6,
+            ),
+        ],
+        has_biological_replicates=True,
+        has_control_group=True,
+        metadata_complete=True,
+    )
+
+    suitable, reasons = experimental_design_evaluator.evaluate(design)
+
+    assert suitable is False
+    assert "No control group is available for comparison." in reasons

@@ -43,3 +43,48 @@ export interface DatasetEvaluation {
   reasons: string[];
   warnings: string[];
 }
+export type IntentFieldStatus =
+  | "explicit"
+  | "inferred"
+  | "confirmed"
+  | "unknown"
+  | "ambiguous";
+
+export type IntentReviewStatus =
+  | "proposed"
+  | "needs_clarification"
+  | "confirmed";
+
+export interface IntentField {
+  value: string | null;
+  status: IntentFieldStatus;
+  evidence: string[];
+}
+
+export interface ResearchIntent {
+  original_question: string;
+  review_status: IntentReviewStatus;
+  research_goal: IntentField;
+  disease: IntentField;
+  gene: IntentField;
+  organism: IntentField;
+  tissue: IntentField;
+  assay_type: IntentField;
+  analysis_goal: IntentField;
+  comparison: IntentField;
+  constraints: string[];
+  clarification_required: boolean;
+  clarification_questions: string[];
+}
+
+export interface IntentInterpretationResponse {
+  intent: ResearchIntent;
+  source: "ai" | "rules_fallback";
+  warning?: string | null;
+}
+
+export interface IntentApprovalResponse {
+  intent: ResearchIntent;
+  approval_token: string;
+  expires_in_seconds: number;
+}

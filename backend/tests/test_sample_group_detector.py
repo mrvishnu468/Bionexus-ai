@@ -189,3 +189,62 @@ def test_does_not_infer_group_from_unrelated_metadata():
 
     assert result.status == GroupDetectionStatus.UNKNOWN
     assert result.groups == []
+
+
+def test_preserves_distinct_named_experimental_groups():
+    samples = [
+        {
+            "accession": "SRS301",
+            "attributes": {"condition": "early breast cancer"},
+        },
+        {
+            "accession": "SRS302",
+            "attributes": {"condition": "advanced breast cancer"},
+        },
+        {
+            "accession": "SRS303",
+            "attributes": {"condition": "benign breast tumor"},
+        },
+        {
+            "accession": "SRS304",
+            "attributes": {
+                "condition": "matched adjacent non-tumor tissue"
+            },
+        },
+    ]
+
+    result = sample_group_detector.detect(samples)
+
+    assert len(result.groups) == 4
+    assert {group.name for group in result.groups} == {
+        "early breast cancer",
+        "advanced breast cancer",
+        "benign breast tumor",
+        "matched adjacent non-tumor tissue",
+    }
+    assert all(
+        group.confidence < 1.0
+        for group in result.groups
+    )
+
+
+def test_adjacent_non_tumor_tissue_is_not_assumed_healthy():
+    samples = [
+        {
+            "accession": "SRS310",
+            "attributes": {
+                "condition": "matched adjacent non-tumor tissue"
+            },
+        },
+        {
+            "accession": "SRS311",
+            "attributes": {
+                "condition": "early breast cancer"
+            },
+        },
+    ]
+
+    result = sample_group_detector.detect(samples)
+
+    assert "Control" not in {group.name for group in result.groups}
+    assert "Disease" not in {group.name for group in result.groups}

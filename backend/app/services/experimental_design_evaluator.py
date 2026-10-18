@@ -8,7 +8,23 @@ class ExperimentalDesignEvaluator:
         if not design.metadata_complete:
             reasons.append("Experimental metadata is incomplete.")
 
-        if not design.has_control_group:
+        control_names = {
+            "control",
+            "healthy",
+            "healthy control",
+            "normal",
+            "normal control",
+            "unaffected",
+            "wild type",
+            "wild-type",
+            "wt",
+        }
+        has_explicit_control = any(
+            group.name.strip().lower() in control_names
+            for group in design.groups
+        )
+
+        if not design.has_control_group or not has_explicit_control:
             reasons.append("No control group is available for comparison.")
 
         if not design.has_biological_replicates:

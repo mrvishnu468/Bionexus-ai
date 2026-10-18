@@ -1,3 +1,4 @@
+
 import re
 
 from app.models.sample_groups import (
@@ -23,6 +24,10 @@ class SampleGroupDetector:
         "disease_state",
         "case control",
         "case_control",
+    }
+
+    TISSUE_FIELDS = {
+        "tissue",
     }
 
     CONTROL_VALUES = {
@@ -63,14 +68,29 @@ class SampleGroupDetector:
     def _normalize(self, value: str) -> str:
         value = value.strip().lower()
         value = value.replace("_", " ")
-        value = re.sub(r"[-]+", " ", value)
         value = re.sub(r"\s+", " ", value)
         return value
 
     def _normalize_key(self, key: str) -> str:
-        return self._normalize(key)
+        normalized = self._normalize(key)
+        return re.sub(r"[-]+", " ", normalized)
 
-    def _classify_value(self, value: str) -> str | None:
+    def _classify_value(
+        self,
+        value: str,
+        is_tissue: bool = False,
+    ) -> str | None:
+        if not isinstance(value, str) or not value.strip():
+            return None
+
+        if is_tissue:
+            # Remove only a trailing sample-number suffix, e.g. "_4".
+            value = re.sub(r"_\d+$", "", value.strip())
+
+            # Short coded values such as V1 do not establish a group.
+            if re.fullmatch(r"[A-Za-z]{1,3}\d+", value.strip()):
+                return None
+
         normalized = self._normalize(value)
 
         if normalized in self.CONTROL_VALUES:
@@ -79,7 +99,7 @@ class SampleGroupDetector:
         if normalized in self.DISEASE_VALUES:
             return "Disease"
 
-        return None
+        return normalized or None
 
     def detect(
         self,
@@ -89,23 +109,39 @@ class SampleGroupDetector:
         evidence: dict[str, list[str]] = {}
         warnings: list[str] = []
 
+        group_fields = {
+            self._normalize_key(field)
+            for field in self.GROUP_FIELDS
+        }
+        tissue_fields = {
+            self._normalize_key(field)
+            for field in self.TISSUE_FIELDS
+        }
+
         for sample in samples:
             sample_accession = sample.get("accession", "")
             attributes = sample.get("attributes", {})
+
+            if not isinstance(attributes, dict):
+                attributes = {}
 
             matched_group = None
             matched_evidence = None
 
             for key, value in attributes.items():
                 normalized_key = self._normalize_key(key)
+                is_tissue = normalized_key in tissue_fields
 
-                if normalized_key not in {
-                    self._normalize_key(field)
-                    for field in self.GROUP_FIELDS
-                }:
+                if (
+                    normalized_key not in group_fields
+                    and not is_tissue
+                ):
                     continue
 
-                group = self._classify_value(value)
+                group = self._classify_value(
+                    value,
+                    is_tissue=is_tissue,
+                )
 
                 if group is not None:
                     matched_group = group
@@ -134,10 +170,24 @@ class SampleGroupDetector:
                 name=name,
                 sample_accessions=accessions,
                 evidence=evidence[name],
-                confidence=1.0,
+                confidence=(
+                    1.0
+                    if name in {"Control", "Disease"}
+                    else 0.8
+                ),
             )
             for name, accessions in grouped_samples.items()
         ]
+
+        if any(
+            name not in {"Control", "Disease"}
+            for name in grouped_samples
+        ):
+            warnings.append(
+                "Named experimental groups were preserved from metadata; "
+                "their biological roles and suitability for comparison "
+                "require researcher review."
+            )
 
         if len(groups) >= 2:
             status = GroupDetectionStatus.CONFIRMED
