@@ -1,4 +1,4 @@
-
+﻿
 import re
 
 from app.models.research_intent import (
@@ -13,19 +13,115 @@ class ResearchIntentParser:
     """Extract clearly stated research criteria without confirming them."""
 
     DISEASE_TERMS = (
-        "breast cancer",
         "triple-negative breast cancer",
-        "tnbc",
-        "lung cancer",
-        "colorectal cancer",
+        "triple negative breast cancer",
+        "non-small cell lung cancer",
+        "small cell lung cancer",
+        "acute myeloid leukemia",
+        "acute lymphoblastic leukemia",
+        "chronic lymphocytic leukemia",
+        "chronic myeloid leukemia",
+        "non-hodgkin lymphoma",
+        "hodgkin lymphoma",
+        "systemic lupus erythematosus",
+        "inflammatory bowel disease",
+        "idiopathic pulmonary fibrosis",
+        "chronic obstructive pulmonary disease",
+        "polycystic ovary syndrome",
+        "type 1 diabetes",
+        "type 2 diabetes",
+        "multiple sclerosis",
+        "multiple myeloma",
+        "hepatocellular carcinoma",
+        "renal cell carcinoma",
+        "colorectal carcinoma",
+        "glioblastoma multiforme",
+        "coronary artery disease",
+        "chronic kidney disease",
+        "acute kidney injury",
+        "ulcerative colitis",
+        "rheumatoid arthritis",
+        "osteoarthritis",
+        "osteoporosis",
+        "endometriosis",
+        "melanoma",
+        "glioblastoma",
+        "glioma",
+        "leukemia",
+        "leukaemia",
+        "lymphoma",
+        "myeloma",
+        "ovarian cancer",
+        "pancreatic cancer",
+        "liver cancer",
+        "gastric cancer",
+        "stomach cancer",
+        "esophageal cancer",
+        "oesophageal cancer",
+        "kidney cancer",
+        "renal cancer",
+        "bladder cancer",
+        "thyroid cancer",
+        "cervical cancer",
+        "endometrial cancer",
+        "uterine cancer",
         "prostate cancer",
-        "alzheimer disease",
+        "colorectal cancer",
+        "colon cancer",
+        "rectal cancer",
+        "triple-negative breast cancer",
+        "breast cancer",
+        "lung cancer",
+        "brain cancer",
+        "skin cancer",
         "alzheimer's disease",
-        "parkinson disease",
+        "alzheimer disease",
         "parkinson's disease",
+        "parkinson disease",
+        "huntington's disease",
+        "huntington disease",
+        "crohn's disease",
+        "crohn disease",
+        "fatty liver disease",
+        "nonalcoholic fatty liver disease",
+        "non-alcoholic steatohepatitis",
+        "cardiovascular disease",
+        "heart failure",
+        "atherosclerosis",
+        "pulmonary fibrosis",
+        "diabetes mellitus",
         "diabetes",
+        "obesity",
+        "asthma",
+        "copd",
+        "nash",
+        "nafld",
+        "nsclc",
+        "tnbc",
+        "aml",
+        "cll",
+        "cml",
+        "sle",
+        "ibd",
+        "pcos",
+        "covid-19",
+        "covid 19",
+        "sars-cov-2 infection",
+        "tuberculosis",
+        "hiv infection",
+        "hiv",
+        "aids",
+        "malaria",
+        "dengue",
+        "hepatitis b",
+        "hepatitis c",
+        "sepsis",
+        "epilepsy",
+        "anemia",
+        "anaemia",
+        "human immunodeficiency virus",
+        "multiple myeloma",
     )
-
     ORGANISMS = {
         "homo sapiens": "Homo sapiens",
         "human": "Homo sapiens",
@@ -36,17 +132,17 @@ class ResearchIntentParser:
     }
 
     TISSUES = (
-    "breast tissue",
-    "lung tissue",
-    "brain tissue",
-    "liver tissue",
-    "colon tissue",
-    "tumor tissue",
-    "tumour tissue",
-    "peripheral blood",
-    "whole blood",
-    "blood",
-)
+        "breast tissue",
+        "lung tissue",
+        "brain tissue",
+        "liver tissue",
+        "colon tissue",
+        "tumor tissue",
+        "tumour tissue",
+        "peripheral blood",
+        "whole blood",
+        "blood",
+    )
 
 
 
@@ -104,6 +200,42 @@ class ResearchIntentParser:
             evidence=[f"Matched search phrase: '{term}'."],
         )
 
+    @classmethod
+    def _extract_disease(cls, text: str) -> IntentField:
+        """Extract a specific disease or flag multiple diseases."""
+        matches = list(dict.fromkeys(
+            term.casefold()
+            for term in cls.DISEASE_TERMS
+            if cls._contains_phrase(text, term)
+        ))
+
+        if not matches:
+            return IntentField()
+
+        # Remove shorter matches contained in a more specific term.
+        specific = [
+            term for term in matches
+            if not any(
+                term != other and term in other
+                for other in matches
+            )
+        ]
+
+        if len(specific) > 1:
+            return IntentField(
+                status=IntentFieldStatus.AMBIGUOUS,
+                evidence=[
+                    "Multiple candidate diseases were found: "
+                    + ", ".join(specific)
+                ],
+            )
+
+        term = specific[0]
+        return IntentField(
+            value=term,
+            status=IntentFieldStatus.EXPLICIT,
+            evidence=[f"Matched search phrase: '{term}'."],
+        )
     @classmethod
     def _extract_organism(cls, text: str) -> IntentField:
         matches = {
@@ -210,10 +342,7 @@ class ResearchIntentParser:
             ),
         )
 
-        intent.disease = self._extract_term(
-            question,
-            self.DISEASE_TERMS,
-        )
+        intent.disease = self._extract_disease(question)
         intent.organism = self._extract_organism(question)
         intent.tissue = self._extract_term(
             question,
@@ -225,3 +354,6 @@ class ResearchIntentParser:
 
 
 research_intent_parser = ResearchIntentParser()
+
+
+

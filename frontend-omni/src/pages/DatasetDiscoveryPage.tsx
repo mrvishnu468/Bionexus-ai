@@ -1,5 +1,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { saveResearchContext } from "../services/researchContext";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
@@ -108,6 +110,8 @@ export function DatasetDiscoveryPage() {
   const [reviewMessage, setReviewMessage] = useState("");
   const [reviewQuestions, setReviewQuestions] = useState<string[]>([]);
   const [reviewReasons, setReviewReasons] = useState<string[]>([]);
+  const [selectionMessage, setSelectionMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
@@ -246,6 +250,11 @@ export function DatasetDiscoveryPage() {
           and analysis criteria before searching for datasets.
         </p>
       </form>
+      {selectionMessage && (
+        <EmptyState title="Dataset selection saved">
+          {selectionMessage}
+        </EmptyState>
+      )}
 
       {loading && (
         <EmptyState title="Processing research request">
@@ -601,6 +610,38 @@ export function DatasetDiscoveryPage() {
                     </div>
                   </details>
                 )}
+                <div className="dataset-card-section">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const accession = dataset.accession.trim().toUpperCase();
+                      const isGeoSeries = /^GSE\d+$/.test(accession);
+                      saveResearchContext({
+                        researchQuery: query.trim(),
+                        selectedDataset: {
+                          accession,
+                          studyAccession: dataset.study_accession ?? null,
+                          title,
+                          organism: dataset.organism ?? null,
+                          assayType: evaluation.assay_type,
+                          suitability: evaluation.suitability,
+                          researchQuery: query.trim(),
+                          selectedAt: new Date().toISOString(),
+                        },
+                      });
+                      if (isGeoSeries) {
+                        setSelectionMessage("");
+                        navigate("/analysis");
+                      } else {
+                        setSelectionMessage(
+                          `${accession} is saved, but the current Analysis workspace accepts GEO Series accessions (GSE...). This dataset has not been submitted to the GEO analysis endpoint.`
+                        );
+                      }
+                    }}
+                  >
+                    Use dataset for analysis
+                  </Button>
+                </div>
               </article>
             );
           })}

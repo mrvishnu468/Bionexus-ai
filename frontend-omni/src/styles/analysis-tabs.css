@@ -1,0 +1,75 @@
+
+.analysis-workflow-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .analysis-tab-button {
+    width: 100%;
+    min-width: 0;
+    font: inherit;
+    color: var(--color-text-muted);
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  
+  .analysis-tab-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+  
+  .analysis-tab-button:not(:disabled):hover {
+    color: var(--color-text);
+  }
+  
+  .analysis-tab-button:focus-visible {
+    outline: 2px solid var(--color-text-muted);
+    outline-offset: 3px;
+  }
+  
+  .analysis-pair-card {
+    margin-block: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: transparent;
+  }
+  
+  .analysis-pair-card .analysis-panel-heading {
+    margin-bottom: 1rem;
+  }
+  
+  .analysis-pair-card h3 {
+    margin-top: 0;
+  }
+  
+  .analysis-pair-card .analysis-design-grid {
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: 760px) {
+    .analysis-workflow-tabs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  
+    .analysis-tab-button {
+      min-height: 3.5rem;
+    }
+  
+    .analysis-pair-card {
+      padding: 0.875rem;
+    }
+  }
+  
+  @media (max-width: 420px) {
+    .analysis-workflow-tabs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  

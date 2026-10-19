@@ -1,4 +1,4 @@
-
+﻿
 import asyncio
 
 import pytest
@@ -11,36 +11,50 @@ from app.services.intent_interpreter import ResearchIntentInterpreter
 from app.services.intent_parser import ResearchIntentParser
 
 
+UNKNOWN_QUERY = "unknown condition"
+
+
 class FakeAIProvider:
     def __init__(self, response):
         self.response = response
+        self.calls = 0
 
     async def interpret(self, query: str):
+        self.calls += 1
         return self.response
 
 
-def test_ai_provider_output_is_validated_and_remains_proposed():
-    proposed = ResearchIntentParser().parse(
-        "breast cancer Homo sapiens RNA-Seq"
-    )
-    proposed.disease.evidence = ["breast cancer"]
+def ai_intent(query="unknown condition Homo sapiens RNA-Seq"):
+    proposed = ResearchIntentParser().parse(query)
+
+    proposed.disease.value = "unknown condition"
+    proposed.disease.status = IntentFieldStatus.EXPLICIT
+    proposed.disease.evidence = ["unknown condition"]
+
+    proposed.organism.value = "Homo sapiens"
+    proposed.organism.status = IntentFieldStatus.EXPLICIT
     proposed.organism.evidence = ["Homo sapiens"]
+
+    proposed.assay_type.value = "RNA-Seq"
+    proposed.assay_type.status = IntentFieldStatus.EXPLICIT
     proposed.assay_type.evidence = ["RNA-Seq"]
+
+    return proposed
+
+
+def test_ai_output_is_validated_and_remains_proposed():
+    query = "unknown condition Homo sapiens RNA-Seq"
+    proposed = ai_intent(query)
     provider = FakeAIProvider(proposed.model_dump())
     interpreter = ResearchIntentInterpreter(provider=provider)
 
-    result = asyncio.run(
-        interpreter.interpret(
-            "  breast cancer Homo sapiens RNA-Seq  "
-        )
-    )
+    result = asyncio.run(interpreter.interpret(f"  {query}  "))
 
     assert result.source == "ai"
     assert result.warning is None
-    assert result.intent.original_question == (
-        "breast cancer Homo sapiens RNA-Seq"
-    )
+    assert result.intent.original_question == query
     assert result.intent.review_status == IntentReviewStatus.PROPOSED
+    assert provider.calls == 1
 
 
 def test_invalid_ai_output_uses_disclosed_fallback():
@@ -49,7 +63,7 @@ def test_invalid_ai_output_uses_disclosed_fallback():
     )
 
     result = asyncio.run(
-        interpreter.interpret("breast cancer RNA-Seq")
+        interpreter.interpret("unknown condition RNA-Seq")
     )
 
     assert result.source == "rules_fallback"
@@ -58,37 +72,35 @@ def test_invalid_ai_output_uses_disclosed_fallback():
 
 
 def test_no_provider_uses_rules_fallback():
-    interpreter = ResearchIntentInterpreter()
-
     result = asyncio.run(
-        interpreter.interpret("breast cancer RNA-Seq")
+        ResearchIntentInterpreter().interpret("breast cancer RNA-Seq")
     )
 
     assert result.source == "rules_fallback"
-    assert result.warning is not None
+    assert result.warning is None
     assert result.intent.disease.value == "breast cancer"
 
 
 def test_empty_query_is_rejected():
-    interpreter = ResearchIntentInterpreter()
-
     with pytest.raises(ValueError):
-        asyncio.run(interpreter.interpret("   "))
+        asyncio.run(ResearchIntentInterpreter().interpret("   "))
 
 
 def test_ai_cannot_self_confirm_a_field():
-    proposed = ResearchIntentParser().parse("breast cancer")
+    query = "unknown condition"
+    proposed = ai_intent(query)
     proposed.disease.status = IntentFieldStatus.CONFIRMED
-    interpreter = ResearchIntentInterpreter(
-        provider=FakeAIProvider(proposed.model_dump())
-    )
 
-    result = asyncio.run(
-        interpreter.interpret("breast cancer")
-    )
+    provider = FakeAIProvider(proposed.model_dump())
+    interpreter = ResearchIntentInterpreter(provider=provider)
 
+    result = asyncio.run(interpreter.interpret(query))
+
+    assert result.source == "ai"
     assert result.intent.review_status == IntentReviewStatus.PROPOSED
     assert result.intent.disease.status == IntentFieldStatus.INFERRED
+    assert provider.calls == 1
+
 
 def test_ungrounded_explicit_claim_is_downgraded():
     proposed = ResearchIntentParser().parse("find expression datasets")
@@ -96,9 +108,9 @@ def test_ungrounded_explicit_claim_is_downgraded():
     proposed.organism.status = IntentFieldStatus.EXPLICIT
     proposed.organism.evidence = ["Homo sapiens"]
 
-    interpreter = ResearchIntentInterpreter(
-        provider=FakeAIProvider(proposed.model_dump())
-    )
+    provider = FakeAIProvider(proposed.model_dump())
+    interpreter = ResearchIntentInterpreter(provider=provider)
+
     result = asyncio.run(
         interpreter.interpret("find expression datasets")
     )
@@ -106,3 +118,32 @@ def test_ungrounded_explicit_claim_is_downgraded():
     assert result.intent.organism.value == "Homo sapiens"
     assert result.intent.organism.status == IntentFieldStatus.INFERRED
     assert result.intent.review_status == IntentReviewStatus.PROPOSED
+    assert provider.calls == 1
+
+
+def test_confident_rules_skip_ai_provider():
+    provider = FakeAIProvider({})
+    interpreter = ResearchIntentInterpreter(provider=provider)
+
+    result = asyncio.run(
+        interpreter.interpret("breast cancer RNA-Seq")
+    )
+
+    assert result.source == "rules_fallback"
+    assert result.warning is None
+    assert result.intent.disease.value == "breast cancer"
+    assert result.intent.review_status == IntentReviewStatus.PROPOSED
+    assert provider.calls == 0
+
+
+def test_unknown_disease_uses_ai_provider():
+    proposed = ai_intent()
+    provider = FakeAIProvider(proposed.model_dump())
+    interpreter = ResearchIntentInterpreter(provider=provider)
+
+    result = asyncio.run(
+        interpreter.interpret("unknown condition RNA-Seq")
+    )
+
+    assert result.source == "ai"
+    assert provider.calls == 1

@@ -1,4 +1,4 @@
-import json
+﻿import json
 
 from app.models.research_intent import ResearchIntent
 from app.models.research_intent import (
@@ -102,3 +102,35 @@ def test_extracts_comparison_using_versus():
         "tumor samples vs healthy controls"
     )
     assert intent.comparison.status == IntentFieldStatus.EXPLICIT
+
+def test_recognizes_additional_disease_terms():
+    parser = ResearchIntentParser()
+
+    for query, expected in [
+        ("glioblastoma expression datasets", "glioblastoma"),
+        ("NSCLC RNA-seq datasets", "nsclc"),
+        ("Crohn's disease in human", "crohn's disease"),
+        ("COVID-19 gene expression", "covid-19"),
+        ("type 2 diabetes datasets", "type 2 diabetes"),
+    ]:
+        intent = parser.parse(query)
+        assert intent.disease.value == expected, query
+        assert intent.disease.status == IntentFieldStatus.EXPLICIT, query
+
+
+def test_multiple_distinct_diseases_are_not_silently_selected():
+    intent = ResearchIntentParser().parse(
+        "Compare breast cancer and lung cancer datasets"
+    )
+
+    assert intent.disease.status == IntentFieldStatus.AMBIGUOUS
+    assert intent.disease.value is None
+
+
+def test_specific_disease_term_is_preferred():
+    intent = ResearchIntentParser().parse(
+        "triple-negative breast cancer RNA-seq"
+    )
+
+    assert intent.disease.value == "triple-negative breast cancer"
+    assert intent.disease.status == IntentFieldStatus.EXPLICIT
